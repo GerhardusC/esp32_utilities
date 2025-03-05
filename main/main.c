@@ -198,42 +198,117 @@ void setup() {
 
 }
 
+void display_on_seven_seg(uint8_t num){
+    switch(num){
+        case 0:
+            // 00111111 = 0
+            uint8_t zero = 0b00111111;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = zero & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 1:
+            // 00110000 = 1
+            uint8_t one = 0b00110000;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = one & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 2:
+            // 01011011 = 2
+            uint8_t two = 0b01011011;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = two & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 3:
+            // 01111001 = 3
+            uint8_t three = 0b01111001;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = three & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 4:
+            // 01110100 = 4
+            uint8_t four = 0b01110100;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = four & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 5:
+            // 01101101 = 5
+            uint8_t five = 0b01101101;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = five & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 6:
+            // 01101111 = 6
+            uint8_t six = 0b01101111;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = six & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 7:
+            // 00111000 = 7
+            uint8_t seven = 0b00111000;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = seven & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 8:
+            // 01111111 = 8
+            uint8_t eight = 0b01111111;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = eight & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        case 9:
+            // 01111101 = 9
+            uint8_t nine = 0b01111101;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = nine & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+        default:
+            uint8_t dot = 0b10000000;
+            for(uint8_t i = 0; i < 8; i++){
+                uint8_t val = dot & 1 << (7 - i);
+                write_to_shift_register(val);
+            }
+            break;
+    }
+}
 
 void app_main(void) {
     setup();
     xTaskCreate(temp_task, "Temp reading task", 5000, NULL, 1, NULL);
 
-    // 00110000 = 1
-    // 01011011 = 2
-    // 01111001 = 3
-    // 01110100 = 4
-    // 01101101 = 5
-    // 01101111 = 6
-    // 00111000 = 7
-    // 01111111 = 8
-    // 01111101 = 9
 
     clear_shift_register();
+
+    int i = 0;
 
     while(1) {
         // Use to reset.
         // gpio_set_level(2, 1);
+        
         vTaskDelay(100);
-        for(int i = 0; i < 8; i++){
-            if(i == 2 || i == 3){
-                write_to_shift_register(1);
-            } else {
-                write_to_shift_register(0);
-            }
-        }
-        // gpio_set_level(2, 0);
-        vTaskDelay(100);
-        for(int i = 0; i < 8; i++){
-            if(i == 1 || i == 3 || i == 4 || i == 7 || i == 6){
-                write_to_shift_register(1);
-            } else {
-                write_to_shift_register(0);
-            }
-        }
+        display_on_seven_seg(i);
+
+        i++;
+        if(i > 10){
+            i = 0;
+        };
     }
 }
