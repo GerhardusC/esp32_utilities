@@ -190,122 +190,49 @@ void clear_shift_register() {
 }
 
 void setup() {
-    // gpio_reset_pin(2);
-    // gpio_set_direction(2, GPIO_MODE_OUTPUT);
-
     setup_shift_register();
     setup_thermometer();
-
 }
 
-void display_on_seven_seg(uint8_t num){
+/**
+ * Takes a normal number from 0-9 and converts it to the correct combination of pins to light up each number.
+ */
+uint8_t get_display_val_from_u8(uint8_t num) {
     switch(num){
-        case 0:
-            // 00111111 = 0
-            uint8_t zero = 0b00111111;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = zero & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 1:
-            // 00110000 = 1
-            uint8_t one = 0b00110000;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = one & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 2:
-            // 01011011 = 2
-            uint8_t two = 0b01011011;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = two & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 3:
-            // 01111001 = 3
-            uint8_t three = 0b01111001;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = three & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 4:
-            // 01110100 = 4
-            uint8_t four = 0b01110100;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = four & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 5:
-            // 01101101 = 5
-            uint8_t five = 0b01101101;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = five & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 6:
-            // 01101111 = 6
-            uint8_t six = 0b01101111;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = six & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 7:
-            // 00111000 = 7
-            uint8_t seven = 0b00111000;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = seven & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 8:
-            // 01111111 = 8
-            uint8_t eight = 0b01111111;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = eight & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        case 9:
-            // 01111101 = 9
-            uint8_t nine = 0b01111101;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = nine & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
-        default:
-            uint8_t dot = 0b10000000;
-            for(uint8_t i = 0; i < 8; i++){
-                uint8_t val = dot & 1 << (7 - i);
-                write_to_shift_register(val);
-            }
-            break;
+        case 0: return 0b00111111;
+        case 1: return 0b00110000;
+        case 2: return 0b01011011;
+        case 3: return 0b01111001;
+        case 4: return 0b01110100;
+        case 5: return 0b01101101;
+        case 6: return 0b01101111;
+        case 7: return 0b00111000;
+        case 8: return 0b01111111;
+        case 9: return 0b01111101;
+        default: return 0b10000000;
+    }
+}
+
+/**
+ * Retrieves the correct pins to light up each number and write the values to the shift register.
+ */
+void display_on_seven_seg(uint8_t num){
+    uint8_t display_val = get_display_val_from_u8(num);
+    for(uint8_t i = 0; i < 8; i++){
+        uint8_t val = display_val & 1 << (7 - i);
+        write_to_shift_register(val);
     }
 }
 
 void app_main(void) {
     setup();
     xTaskCreate(temp_task, "Temp reading task", 5000, NULL, 1, NULL);
-
-
     clear_shift_register();
 
     int i = 0;
-
     while(1) {
-        // Use to reset.
-        // gpio_set_level(2, 1);
-        
         vTaskDelay(100);
         display_on_seven_seg(i);
-
         i++;
         if(i > 10){
             i = 0;
