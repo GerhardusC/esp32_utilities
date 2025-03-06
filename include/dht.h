@@ -9,5 +9,8 @@ struct Temp_reading {
     uint16_t hum_dec;
     uint8_t err;
 };
+
 uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_state);
-void read_temp(gpio_port_t data_pin, struct Temp_reading *measurement);
+
+void read_temp(struct Temp_reading *measurement);
+void setup_thermometer();

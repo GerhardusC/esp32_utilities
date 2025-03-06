@@ -14,6 +14,7 @@
 #include "nvs_flash.h"
 
 #include "dht.h"
+#include "shift_register.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
@@ -29,38 +30,16 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 
-#define DATA_LINE 19
-#define POW_LINE 21
-#define SHIFT_REGISTER_VCC 22
-#define SHIFT_REGISTER_A 23
-#define SHIFT_REGISTER_CLOCK 4
-
-
 // TODO!
 void setup_wifi() {
     wifi_init_config_t config = WIFI_INIT_CONFIG_DEFAULT();
     esp_wifi_init(&config);
 }
 
-
-void toggle_shift_register_clock() {
-    gpio_set_level(SHIFT_REGISTER_CLOCK, 1);
-    gpio_set_level(SHIFT_REGISTER_CLOCK, 0);
-}
-
-void write_to_shift_register(uint8_t val) {
-    // Set data pin to val
-    gpio_set_level(SHIFT_REGISTER_A, val);
-    // Tick clock
-    toggle_shift_register_clock();
-    // reset data pin
-    gpio_set_level(SHIFT_REGISTER_A, 0);
-}
-
 void temp_task() {
     struct Temp_reading measurement = { 0, 0, 0, 0, 0 };
     while(1){
-        read_temp(DATA_LINE, &measurement);
+        read_temp(&measurement);
         if(!measurement.err){
             ESP_LOGI("Results:", "Humidity: %d, Temp: %d", measurement.hum_sig, measurement.temp_sig);
         } else {
@@ -68,36 +47,6 @@ void temp_task() {
         }
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
-}
-
-void setup_thermometer() {
-    gpio_reset_pin(POW_LINE);
-    gpio_reset_pin(DATA_LINE);
-    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT);
-    gpio_set_direction(POW_LINE, GPIO_MODE_OUTPUT);
-
-    gpio_set_level(POW_LINE, 1);
-    gpio_set_level(DATA_LINE, 1);
-}
-
-void setup_shift_register() {
-    gpio_reset_pin(SHIFT_REGISTER_VCC);
-    gpio_set_direction(SHIFT_REGISTER_VCC, GPIO_MODE_OUTPUT);
-    gpio_set_level(SHIFT_REGISTER_VCC, 1);
-
-    gpio_reset_pin(SHIFT_REGISTER_A);
-    gpio_set_direction(SHIFT_REGISTER_A, GPIO_MODE_OUTPUT);
-
-    gpio_reset_pin(SHIFT_REGISTER_CLOCK);
-    gpio_set_direction(SHIFT_REGISTER_CLOCK, GPIO_MODE_OUTPUT);
-}
-
-void clear_shift_register() {
-    gpio_reset_pin(5);
-    gpio_set_direction(5, GPIO_MODE_OUTPUT);
-    gpio_set_level(5, 1);
-    gpio_set_level(5, 0);
-    gpio_set_level(5, 1);
 }
 
 void setup() {

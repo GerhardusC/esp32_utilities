@@ -1,5 +1,17 @@
 #include "dht.h"
 #define DHT_METER_TIMER 2
+#define DATA_LINE 19
+#define POW_LINE 21
+
+void setup_thermometer() {
+    gpio_reset_pin(POW_LINE);
+    gpio_reset_pin(DATA_LINE);
+    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT);
+    gpio_set_direction(POW_LINE, GPIO_MODE_OUTPUT);
+
+    gpio_set_level(POW_LINE, 1);
+    gpio_set_level(DATA_LINE, 1);
+}
 
 uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_state){
     // Set as input pin to read from.
@@ -16,34 +28,34 @@ uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_s
     return 0;
 }
 
-void read_temp(gpio_port_t data_pin, struct Temp_reading *measurement) {
+void read_temp(struct Temp_reading *measurement) {
     // Reset error state.
     measurement->err = 0;
     // Low for 18 us on sig line.
-    gpio_set_direction(data_pin, GPIO_MODE_OUTPUT);
-    gpio_set_level(data_pin, 0);
+    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT);
+    gpio_set_level(DATA_LINE, 0);
     ets_delay_us(19000);
-    gpio_set_level(data_pin, 1);
-    gpio_set_direction(data_pin, GPIO_MODE_INPUT);
+    gpio_set_level(DATA_LINE, 1);
+    gpio_set_direction(DATA_LINE, GPIO_MODE_INPUT);
 
     // Read response.
 
     // Phase 1: Wait 20-40 ms for downpull.
-    if(wait_for_pin_state(data_pin, 40, 0) == 0){
+    if(wait_for_pin_state(DATA_LINE, 40, 0) == 0){
         ESP_LOGI("Something went wrong at:", "Phase 1 wait for pull down.");
         measurement->err = 1;
         return;
     };
 
     // Phase 2: Wait for pull down by sensor
-    if(wait_for_pin_state(data_pin, 88, 1) == 0){
+    if(wait_for_pin_state(DATA_LINE, 88, 1) == 0){
         ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
         measurement->err = 1;
         return;
     };
 
     // Phase 3: Wait for pull down by sensor
-    if(wait_for_pin_state(data_pin, 88, 0) == 0){
+    if(wait_for_pin_state(DATA_LINE, 88, 0) == 0){
         ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
         measurement->err = 1;
         return;
@@ -53,9 +65,9 @@ void read_temp(gpio_port_t data_pin, struct Temp_reading *measurement) {
 
     for(uint8_t i = 0; i < 40; i++){
         // measure low duration
-        uint16_t base_dur = wait_for_pin_state(data_pin, 72, 1);
+        uint16_t base_dur = wait_for_pin_state(DATA_LINE, 72, 1);
         // measure high duration
-        uint16_t bit_dur = wait_for_pin_state(data_pin, 60, 0);
+        uint16_t bit_dur = wait_for_pin_state(DATA_LINE, 60, 0);
 
         uint8_t bit_index = i / 8;
         uint8_t num_byte = i % 8;
