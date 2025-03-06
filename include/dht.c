@@ -10,7 +10,7 @@ void setup_thermometer() {
     gpio_set_direction(POW_LINE, GPIO_MODE_OUTPUT);
 
     gpio_set_level(POW_LINE, 1);
-    gpio_set_level(DATA_LINE, 1);
+    gpio_set_level(DATA_LINE, 0);
 }
 
 uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_state){

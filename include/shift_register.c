@@ -12,10 +12,13 @@ void toggle_shift_register_clock() {
 void write_to_shift_register(uint8_t val) {
     // Set data pin to val
     gpio_set_level(SHIFT_REGISTER_A, val);
+    vTaskDelay(5);
     // Tick clock
     toggle_shift_register_clock();
+    vTaskDelay(5);
     // reset data pin
     gpio_set_level(SHIFT_REGISTER_A, 0);
+    vTaskDelay(5);
 }
 
 void setup_shift_register() {

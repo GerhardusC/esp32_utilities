@@ -1,4 +1,6 @@
 #include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 void clear_shift_register();
 void setup_shift_register();
