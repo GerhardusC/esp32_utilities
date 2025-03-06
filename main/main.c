@@ -21,7 +21,7 @@
 /* Wifi connect signal group*/
 static EventGroupHandle_t s_wifi_event_group;
 
-/* The event group allows multiple bits for each event, but we only care about two events:
+/* From the ESP docs re. WiFi: The event group allows multiple bits for each event, but we only care about two events:
  * - we are connected to the AP with an IP
  * - we failed to connect after the maximum amount of retries */
 #define WIFI_CONNECTED_BIT BIT0
@@ -58,22 +58,16 @@ uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_s
 
 void toggle_shift_register_clock() {
     gpio_set_level(SHIFT_REGISTER_CLOCK, 1);
-    // ets_delay_us(5);
     gpio_set_level(SHIFT_REGISTER_CLOCK, 0);
-    // ets_delay_us(5);
 }
 
 void write_to_shift_register(uint8_t val) {
     // Set data pin to val
     gpio_set_level(SHIFT_REGISTER_A, val);
-    // ets_delay_us(5);
-
     // Tick clock
     toggle_shift_register_clock();
-
     // reset data pin
     gpio_set_level(SHIFT_REGISTER_A, 0);
-    // ets_delay_us(5);
 }
 
 struct Temp_reading {
