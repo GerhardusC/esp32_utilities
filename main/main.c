@@ -36,12 +36,11 @@ void setup_wifi() {
     esp_wifi_init(&config);
 }
 
-void temp_task() {
-    struct Temp_reading measurement = { 0, 0, 0, 0, 0 };
+void temp_task(struct Temp_reading *measurement) {
     while(1){
-        read_temp(&measurement);
-        if(!measurement.err){
-            ESP_LOGI("Results:", "Humidity: %d, Temp: %d", measurement.hum_sig, measurement.temp_sig);
+        read_temp(measurement);
+        if(!measurement->err){
+            ESP_LOGI("Results:", "Humidity: %d, Temp: %d", measurement->hum_sig, measurement->temp_sig);
         } else {
             ESP_LOGI("ERROR:", "Thermometer error");
         }
@@ -56,16 +55,17 @@ void setup() {
 
 void app_main(void) {
     setup();
-    xTaskCreate(temp_task, "Temp reading task", 5000, NULL, 1, NULL);
+
+    struct Temp_reading measurement = { 0 , 0 , 0 , 0 };
+
+    xTaskCreate(temp_task, "Temp reading task", 5000, (void *) &measurement, 1, NULL);
     clear_shift_register();
 
     int i = 0;
     while(1) {
-        vTaskDelay(10);
-        display_on_seven_seg(i);
-        i++;
-        if(i > 100){
-            i = 0;
-        };
+        vTaskDelay(500);
+        display_on_seven_seg(measurement.temp_sig);
+        vTaskDelay(500);
+        display_on_seven_seg(measurement.hum_sig);
     }
 }

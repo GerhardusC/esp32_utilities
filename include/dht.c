@@ -28,6 +28,12 @@ uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_s
     return 0;
 }
 
+void try_recover_once() {
+    gpio_set_level(POW_LINE, 0);
+    ets_delay_us(100);
+    gpio_set_level(POW_LINE, 1);
+}
+
 void read_temp(struct Temp_reading *measurement) {
     // Reset error state.
     measurement->err = 0;
@@ -43,6 +49,7 @@ void read_temp(struct Temp_reading *measurement) {
     // Phase 1: Wait 20-40 ms for downpull.
     if(wait_for_pin_state(DATA_LINE, 40, 0) == 0){
         ESP_LOGI("Something went wrong at:", "Phase 1 wait for pull down.");
+        try_recover_once();
         measurement->err = 1;
         return;
     };
@@ -50,6 +57,7 @@ void read_temp(struct Temp_reading *measurement) {
     // Phase 2: Wait for pull down by sensor
     if(wait_for_pin_state(DATA_LINE, 88, 1) == 0){
         ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
+        try_recover_once();
         measurement->err = 1;
         return;
     };
@@ -57,6 +65,7 @@ void read_temp(struct Temp_reading *measurement) {
     // Phase 3: Wait for pull down by sensor
     if(wait_for_pin_state(DATA_LINE, 88, 0) == 0){
         ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
+        try_recover_once();
         measurement->err = 1;
         return;
     };
