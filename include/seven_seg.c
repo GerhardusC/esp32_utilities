@@ -1,5 +1,6 @@
 #include "seven_seg.h"
 #include "shift_register.h"
+#include "utils.h"
 
 /**
  * Takes a normal number from 0-9 and converts it to the correct combination of pins to light up each number.*/
@@ -19,12 +20,17 @@ uint8_t get_display_val_from_u8(uint8_t num) {
     }
 }
 
+void push_u8_to_shift_register(uint8_t num){
+    for(uint8_t i = 0; i < 8; i++){
+        uint8_t val = num & 1 << (7 - i);
+        write_to_shift_register(val);
+    }
+}
+
 /**
  * Retrieves the correct pins to light up each number and write the values to the shift register.*/
 void display_on_seven_seg(uint8_t num){
-    uint8_t display_val = get_display_val_from_u8(num);
-    for(uint8_t i = 0; i < 8; i++){
-        uint8_t val = display_val & 1 << (7 - i);
-        write_to_shift_register(val);
-    }
+    struct DisplayVal display_val = convert_number_to_display_val(num);
+    push_u8_to_shift_register(get_display_val_from_u8(display_val.tens));
+    push_u8_to_shift_register(get_display_val_from_u8(display_val.ones));
 }

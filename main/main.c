@@ -14,6 +14,7 @@
 #include "dht.h"
 #include "shift_register.h"
 #include "seven_seg.h"
+#include "utils.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
@@ -60,10 +61,10 @@ void app_main(void) {
 
     int i = 0;
     while(1) {
-        vTaskDelay(100);
+        vTaskDelay(10);
         display_on_seven_seg(i);
         i++;
-        if(i > 10){
+        if(i > 100){
             i = 0;
         };
     }
