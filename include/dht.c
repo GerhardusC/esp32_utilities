@@ -1,7 +1,7 @@
 #include "dht.h"
 #define DHT_METER_TIMER 2
-#define DATA_LINE 19
-#define POW_LINE 21
+#define DATA_LINE 18
+#define POW_LINE 19
 
 void setup_thermometer() {
     gpio_reset_pin(POW_LINE);
