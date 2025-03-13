@@ -1,76 +1,61 @@
 #include "dht.h"
 #define DHT_METER_TIMER 2
-#define DATA_LINE 18
-#define POW_LINE 19
+#define DATA_LINE 4
+
+static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+#define PORT_ENTER_CRITICAL() portENTER_CRITICAL(&mux)
+#define PORT_EXIT_CRITICAL() portEXIT_CRITICAL(&mux)
 
 void setup_thermometer() {
-    gpio_reset_pin(POW_LINE);
     gpio_reset_pin(DATA_LINE);
-    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT);
-    gpio_set_direction(POW_LINE, GPIO_MODE_OUTPUT);
+    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT_OD);
 
-    gpio_set_level(POW_LINE, 1);
     gpio_set_level(DATA_LINE, 0);
+    gpio_set_level(DATA_LINE, 1);
 }
 
 uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_state){
     // Set as input pin to read from.
     gpio_set_direction(pin, GPIO_MODE_INPUT);
-
     for(int i = 0; i < timeout; i += DHT_METER_TIMER){
         // Wait one cycle apparently for jitter.
-        ets_delay_us(DHT_METER_TIMER);
+        wait_us_blocking(DHT_METER_TIMER);
         if(gpio_get_level(pin) == expected_state){
             return i;
         };
     }
-    ESP_LOGE("Err", "Pin wait timeout");
+    // ESP_LOGE("Err", "Pin wait timeout");
     return 0;
 }
 
-void try_recover_once() {
-    gpio_set_level(POW_LINE, 0);
-    ets_delay_us(100);
-    gpio_set_level(POW_LINE, 1);
-}
-
-void read_temp(struct Temp_reading *measurement) {
-    // Reset error state.
-    measurement->err = 0;
-    // Low for 18 us on sig line.
-    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT);
+void read_temp_critical_section(struct Temp_reading *measurement){
+    // Low for 18 ms on sig line.
     gpio_set_level(DATA_LINE, 0);
-    ets_delay_us(19000);
+    wait_us_blocking(18000);
     gpio_set_level(DATA_LINE, 1);
-    gpio_set_direction(DATA_LINE, GPIO_MODE_INPUT);
-
     // Read response.
-
-    // Phase 1: Wait 20-40 ms for downpull.
+    // Phase 1: Wait 20-40 us for downpull.
     if(wait_for_pin_state(DATA_LINE, 40, 0) == 0){
-        ESP_LOGI("Something went wrong at:", "Phase 1 wait for pull down.");
-        try_recover_once();
+        // ESP_LOGI("Something went wrong at:", "Phase 1 wait for pull down.");
         measurement->err = 1;
+        gpio_set_level(DATA_LINE, 1);
         return;
     };
-
     // Phase 2: Wait for pull down by sensor
     if(wait_for_pin_state(DATA_LINE, 88, 1) == 0){
-        ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
-        try_recover_once();
+        // ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
         measurement->err = 1;
+        gpio_set_level(DATA_LINE, 1);
         return;
     };
-
     // Phase 3: Wait for pull down by sensor
     if(wait_for_pin_state(DATA_LINE, 88, 0) == 0){
-        ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
-        try_recover_once();
+        // ESP_LOGI("Something went wrong at:", "Phase 3 wait for pull down by sensor.");
         measurement->err = 1;
+        gpio_set_level(DATA_LINE, 1);
         return;
     };
-
-    uint8_t data[5];
+    uint8_t data[5] = { 0 };
 
     for(uint8_t i = 0; i < 40; i++){
         // measure low duration
@@ -83,18 +68,31 @@ void read_temp(struct Temp_reading *measurement) {
         if (num_byte == 0){
             data[bit_index] = 0;
         } 
-
         bool bit_value = bit_dur > base_dur;
-
         uint8_t current_byte = bit_value << (7 - num_byte);
-
         data[bit_index] = data[bit_index] | current_byte;
     };
-
     measurement->hum_sig = data[0];
     measurement->hum_dec = data[1];
     measurement->temp_sig = data[2];
     measurement->temp_dec = data[3];
+    if(data[0] + data[1] + data[2] + data[3] == data[4]){
+        measurement->err = 0;
+    }
+}
+
+void read_temp(struct Temp_reading *measurement) {
+    // Reset error state.
+    measurement->err = 0;
+    gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT_OD);
+    // PORT_ENTER_CRITICAL();
+    vTaskSuspendAll();
+    read_temp_critical_section(measurement);
+    xTaskResumeAll();
+    // PORT_EXIT_CRITICAL();
+
+
+    gpio_set_level(DATA_LINE, 1);
 
     return;
 }

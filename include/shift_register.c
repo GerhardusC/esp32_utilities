@@ -2,7 +2,7 @@
 
 #define SHIFT_REGISTER_RESET 22
 #define SHIFT_REGISTER_A 23
-#define SHIFT_REGISTER_CLOCK 4
+#define SHIFT_REGISTER_CLOCK 21
 
 void toggle_shift_register_clock() {
     gpio_set_level(SHIFT_REGISTER_CLOCK, 1);
@@ -31,9 +31,9 @@ void setup_shift_register() {
 }
 
 void clear_shift_register() {
-    gpio_reset_pin(5);
-    gpio_set_direction(5, GPIO_MODE_OUTPUT);
-    gpio_set_level(5, 1);
-    gpio_set_level(5, 0);
-    gpio_set_level(5, 1);
+    gpio_reset_pin(SHIFT_REGISTER_RESET);
+    gpio_set_direction(SHIFT_REGISTER_RESET, GPIO_MODE_OUTPUT);
+    gpio_set_level(SHIFT_REGISTER_RESET, 1);
+    gpio_set_level(SHIFT_REGISTER_RESET, 0);
+    gpio_set_level(SHIFT_REGISTER_RESET, 1);
 }

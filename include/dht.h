@@ -1,6 +1,8 @@
-#include <rom/ets_sys.h>
 #include "esp_log.h"
 #include "driver/gpio.h"
+#include "utils.h"
+#include "esp_task.h"
+#include "wifi.h"
 
 struct Temp_reading {
     uint16_t temp_sig;
