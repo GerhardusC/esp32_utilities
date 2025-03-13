@@ -1,7 +1,8 @@
 #include "wifi.h"
+#include "secret.h"
 
-#define WIFI_SSID ""
-#define WIFI_PWD ""
+#define WIFI_SSID MY_WIFI_SSID
+#define WIFI_PWD MY_WIFI_PASSWORD
 #define WIFI_MAXIMUM_RETRY 50
 /* Wifi connect signal group*/
 

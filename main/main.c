@@ -5,7 +5,7 @@
 #include "sdkconfig.h"
 #include "esp_system.h"
 #include "esp_log.h"
-// Logging: ESP_LOGI("", "", "");
+#include "mqtt_client.h"
 #include "esp_event.h"
 #include "nvs_flash.h"
 
@@ -13,11 +13,14 @@
 #include "shift_register.h"
 #include "seven_seg.h"
 #include "wifi.h"
+#include "secret.h"
+// In secrets.h:
+// #define MY_WIFI_PASSWORD
+// #define MY_WIFI_SSID
+// #define MY_BROKER_IP
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
-// ESP_EVENT_DEFINE_BASE(READ_TEMP_EVENTS);
 
 void temp_task(void *measurement) {
     struct Temp_reading* meas = (struct Temp_reading*) measurement;
@@ -32,62 +35,77 @@ void temp_task(void *measurement) {
     }
 }
 
-static void read_temp_event_handler(void* args, esp_event_base_t event_base, int32_t event_id, void* measurement){
+static esp_mqtt_client_config_t mqtt_cfg = {
+    .broker.address.uri = MY_BROKER_IP,
+};
+
+void post_messages_task(void *measurement) {
     struct Temp_reading* meas = (struct Temp_reading*) measurement;
-    read_temp(meas);
-    if(!meas->err){
-        ESP_LOGI("Results:", "Humidity: %d, Temp: %d", meas->hum_sig, meas->temp_sig);
-    } else {
-        ESP_LOGI("ERROR:", "Thermometer error");
+
+    esp_mqtt_client_handle_t mqtthandle =  esp_mqtt_client_init(&mqtt_cfg);
+    esp_mqtt_client_start(mqtthandle);
+
+    uint8_t old_temp_sig = 0;
+    uint8_t old_temp_dec = 0;
+    uint8_t old_hum_sig = 0;
+    uint8_t old_hum_dec = 0;
+
+    while(1){
+        if(old_hum_sig != meas->hum_sig || old_hum_dec != meas->hum_dec){
+            char humidity[16];
+            sprintf(humidity, "%d,%d %%", meas->hum_sig, meas->hum_dec);
+            int msg2 = esp_mqtt_client_publish(mqtthandle, "/humidity", humidity, 0, 1, 0);
+            old_hum_sig = meas->hum_sig;
+            old_hum_dec = meas->hum_dec;
+            ESP_LOGI("MQTT", "Humidity published %d,%d", old_hum_sig, old_hum_dec);
+        }
+        if(old_temp_sig != meas->temp_sig || old_temp_dec != meas->temp_dec){
+            char temperature[16];
+            sprintf(temperature, "%d,%d °C", meas->temp_sig, meas->temp_dec);
+            int msg = esp_mqtt_client_publish(mqtthandle, "/temperature", temperature, 0, 1, 0);
+            old_temp_sig = meas->temp_sig;
+            old_temp_dec = meas->temp_dec;
+            ESP_LOGI("MQTT", "Temp published %d,%d", old_temp_sig, old_temp_dec);
+        }
+        vTaskDelay(500);
+    }
+}
+
+void display_on_seven_seg_task(void *measurement){
+    struct Temp_reading* meas = (struct Temp_reading*) measurement;
+    while(1){
+        vTaskDelay(1000);
+        display_on_seven_seg(meas->temp_sig);
+        vTaskDelay(1000);
+        display_on_seven_seg(meas->hum_sig);
     }
 }
 
 void setup() {
-
     setup_shift_register();
     setup_thermometer();
 }
 
 
 void app_main(void) {
-    wifi_init_connection();
     setup();
-
-    // esp_event_loop_args_t read_temp_event_loop_args = {
-    //     .queue_size = 15,
-    //     .task_name = "temp_task",
-    //     .task_priority = 10,
-    //     .task_stack_size = 5000,
-    //     .task_core_id = 1
-    // };
-
-    // esp_event_loop_handle_t event_loop_handle;
-
-    // esp_event_loop_create(&read_temp_event_loop_args, &event_loop_handle);
-
-    // ESP_ERROR_CHECK(esp_event_handler_instance_register_with(event_loop_handle, READ_TEMP_EVENTS, 10, read_temp_event_handler, event_loop_handle, NULL));
-    
+    wifi_init_connection();
 
     struct Temp_reading *measurement = malloc(sizeof(struct Temp_reading));
-    xTaskCreatePinnedToCore(temp_task, "Temp reading task", 4000, (void *) measurement, 10, NULL, 1);
+    measurement->err = 0;
+    measurement->hum_sig = 0;
+    measurement->hum_dec = 0;
+    measurement->temp_sig = 0;
+    measurement->temp_dec = 0;
+
+    xTaskCreatePinnedToCore(temp_task, "Temp reading task", 6000, (void *) measurement, 24, NULL, 1);
+    xTaskCreate(post_messages_task, "Temp posting task", 4000, (void *) measurement, 1, NULL);
+    xTaskCreate(display_on_seven_seg_task, "Display on seven seg temp task", 4000, (void *) measurement, 1, NULL);
 
     clear_shift_register();
 
-    // int i = 0;
     while(1) {
-        // esp_event_post_to(event_loop_handle, READ_TEMP_EVENTS, 10, (void *) measurement, sizeof(struct Temp_reading), portMAX_DELAY);
-        vTaskDelay(100);
-        display_on_seven_seg(measurement->temp_sig);
-        vTaskDelay(100);
-        display_on_seven_seg(measurement->hum_sig);
-        // vTaskDelay(200);
-        // read_temp(measurement);
-        // if(!measurement->err){
-        //     ESP_LOGI("Results:", "Humidity: %d, Temp: %d", measurement->hum_sig, measurement->temp_sig);
-        // } else {
-        //     ESP_LOGI("ERROR:", "Thermometer error");
-        // }
-        // display_on_seven_seg(i % 100);
-        // i++;
+        vTaskDelay(10000);
+        ;;
     }
 }

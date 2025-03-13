@@ -88,10 +88,8 @@ void read_temp(struct Temp_reading *measurement) {
     // PORT_ENTER_CRITICAL();
     vTaskSuspendAll();
     read_temp_critical_section(measurement);
-    xTaskResumeAll();
     // PORT_EXIT_CRITICAL();
-
-
+    xTaskResumeAll();
     gpio_set_level(DATA_LINE, 1);
 
     return;
