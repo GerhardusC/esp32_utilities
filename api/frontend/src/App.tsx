@@ -1,9 +1,10 @@
 import './App.css'
+import TempHumGraph from './Components/TempHumGraph'
 
 function App() {
   return (
     <>
-        <div>Hello</div>
+        <TempHumGraph />
     </>
   )
 }
