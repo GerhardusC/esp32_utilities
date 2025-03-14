@@ -72,6 +72,7 @@ void read_temp_critical_section(struct Temp_reading *measurement){
         uint8_t current_byte = bit_value << (7 - num_byte);
         data[bit_index] = data[bit_index] | current_byte;
     };
+    xTaskResumeAll();
     measurement->hum_sig = data[0];
     measurement->hum_dec = data[1];
     measurement->temp_sig = data[2];
@@ -88,8 +89,10 @@ void read_temp(struct Temp_reading *measurement) {
     // PORT_ENTER_CRITICAL();
     vTaskSuspendAll();
     read_temp_critical_section(measurement);
+    if(measurement->err == 1){
+        xTaskResumeAll();
+    }
     // PORT_EXIT_CRITICAL();
-    xTaskResumeAll();
     gpio_set_level(DATA_LINE, 1);
 
     return;
