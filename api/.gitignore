@@ -1,0 +1,6 @@
+/target
+dev.db
+dist
+node_modules
+tsconfig.node.tsbuildinfo
+tsconfig.app.tsbuildinfo
