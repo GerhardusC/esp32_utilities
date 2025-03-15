@@ -1,3 +1,5 @@
+use std::{collections::HashMap, time::SystemTime};
+
 use crate::args::ARGS;
 use crate::database;
 use crate::error::Error;
@@ -18,16 +20,16 @@ pub fn routes() -> Router {
     Router::new()
         .route(
             "/get_all_data",
-            get(fetch_all_data_handler),
+            get(read_all_data_handler),
         )
         .route(
             "/get_data_in_range",
-            get(fetch_data_in_range_handler),
+            get(read_data_in_range_handler),
         )
-        // .route(
-        //     "/api/delete_all_data_before_timestamp",
-        //     delete(delete_before_timestamp_handler),
-        // )
+        .route(
+            "/get_data_since",
+            get(read_data_since_handler),
+        )
 }
 
 pub fn routes_static() -> Router {
@@ -38,7 +40,33 @@ pub fn routes_static() -> Router {
  * Route handlers:
  */
 #[axum::debug_handler]
-async fn fetch_data_in_range_handler(
+async fn read_all_data_handler() -> Result<impl IntoResponse, Error> {
+    let res = database::read_all_data(&ARGS.db_path);
+    match res {
+        Ok(result) => Ok(Json(result)),
+        Err(e) => Err(Error::from(e)),
+    }
+}
+
+#[axum::debug_handler]
+async fn read_data_since_handler(
+    Query(params): Query<HashMap<String, u64>>
+) -> Result<impl IntoResponse, Error> {
+    let timestamp_opt = params.get("timestamp");
+    let timestamp = if let Some(x) = timestamp_opt {
+        x
+    } else {
+        &(SystemTime::now().duration_since(SystemTime::UNIX_EPOCH)?.as_secs() - 3600)
+    };
+    let res = database::read_data_since(&ARGS.db_path, *timestamp);
+    match res {
+        Ok(result) => Ok(Json(result)),
+        Err(e) => Err(Error::from(e)),
+    }
+}
+
+#[axum::debug_handler]
+async fn read_data_in_range_handler(
     Query(params): Query<database::QueryDataInRange>,
 ) -> Result<impl IntoResponse, Error> {
     let res = database::read_data_in_range(params, &ARGS.db_path);
@@ -48,14 +76,6 @@ async fn fetch_data_in_range_handler(
     }
 }
 
-#[axum::debug_handler]
-async fn fetch_all_data_handler() -> Result<impl IntoResponse, Error> {
-    let res = database::read_all_data(&ARGS.db_path);
-    match res {
-        Ok(result) => Ok(Json(result)),
-        Err(e) => Err(Error::from(e)),
-    }
-}
 
 #[derive(Deserialize)]
 struct DeleteBeforeTimestampRequestParams {

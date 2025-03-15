@@ -21,15 +21,15 @@ struct Cli {
     host_ip: String,
 }
 
-struct MqttSensorReading {
+struct SensorReading {
     timestamp: u64,
     topic: String,
     value: String,
 }
 
-impl MqttSensorReading {
-    fn new(timestamp: u64, topic: String, value: String) -> MqttSensorReading {
-        MqttSensorReading {
+impl SensorReading {
+    fn new(timestamp: u64, topic: String, value: String) -> SensorReading {
+        SensorReading {
             timestamp,
             topic,
             value,
@@ -90,7 +90,7 @@ async fn subscribe(args: &Cli) -> Result<()> {
         if let Some(subs) = &subscriptions {
             if let Ok(msg) = subs.recv().await {
                 if let Event::Message(message) = msg {
-                    let reading = MqttSensorReading::new(
+                    let reading = SensorReading::new(
                         Local::now().timestamp().try_into()?,
                         message.topic,
                         String::from_utf8(message.payload)?,

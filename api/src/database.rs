@@ -32,6 +32,26 @@ pub fn read_all_data(db_path: &str) -> Result<Vec<SensorDataPoint>, Error> {
     Ok(res)
 }
 
+pub fn read_data_since(db_path: &str, timestamp: u64) -> Result<Vec<SensorDataPoint>, Error> {
+    let conn = Connection::open(db_path)?;
+    let mut statement = conn.prepare("
+        SELECT * FROM READINGS
+            WHERE
+                TIMESTAMP > ?1;
+    ")?;
+    let data_points_iter =
+        statement.query_map(params![timestamp], |row| {
+            Ok(SensorDataPoint {
+                timestamp: row.get(0)?,
+                topic: row.get(1)?,
+                value: row.get(2)?,
+            })
+        })?;
+
+    let res: Vec<SensorDataPoint> = data_points_iter.collect::<rusqlite::Result<Vec<_>>>()?;
+    Ok(res)
+}
+
 pub fn read_data_in_range(
     query: QueryDataInRange,
     db_path: &str,
@@ -42,7 +62,7 @@ pub fn read_data_in_range(
         SELECT * FROM READINGS
             WHERE
                     timestamp > ?1
-                AND timestamp < ?2
+                AND timestamp < ?2;
         ",
     )?;
     let data_points_iter =
