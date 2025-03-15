@@ -18,7 +18,7 @@ struct Cli {
     base_topic: String,
 
     #[arg(short, long, default_value_t = String::from("localhost"))]
-    host_ip: String,
+    broker_ip: String,
 }
 
 struct SensorReading {
@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
         CREATE TABLE if not exists READINGS (
             timestamp int NOT NULL,
             topic varchar(255) NOT NULL,
-            value varchar(255) NOT NULL,
+            value varchar(255) NOT NULL
         )
         ",
         (),
@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
 async fn subscribe(args: &Cli) -> Result<()> {
     let client = Client::with_auto_id()?;
     client
-        .connect(&args.host_ip, 1883, Duration::from_secs(5), None)
+        .connect(&args.broker_ip, 1883, Duration::from_secs(5), None)
         .await?;
 
     let subscriptions = client.subscriber();
