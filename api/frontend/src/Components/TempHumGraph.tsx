@@ -33,7 +33,7 @@ const handleDataFetch = (setHighchartsOpts: React.Dispatch<React.SetStateAction<
                 }
             })
         })
-        .catch((err) => alert(err));
+        .catch((err) => console.log(err));
 }
 
 const TempHumGraph = () => {
