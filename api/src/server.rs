@@ -23,12 +23,12 @@ pub fn routes() -> Router {
             get(read_all_data_handler),
         )
         .route(
-            "/get_data_in_range",
-            get(read_data_in_range_handler),
-        )
-        .route(
             "/get_data_since",
             get(read_data_since_handler),
+        )
+        .route(
+            "/get_data_in_range",
+            get(read_data_in_range_handler),
         )
 }
 

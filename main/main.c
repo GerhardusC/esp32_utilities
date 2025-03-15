@@ -53,19 +53,19 @@ void post_messages_task(void *measurement) {
     while(1){
         if(old_hum_sig != meas->hum_sig || old_hum_dec != meas->hum_dec){
             char humidity[16];
-            sprintf(humidity, "%d,%d %%", meas->hum_sig, meas->hum_dec);
+            sprintf(humidity, "%d.%d", meas->hum_sig, meas->hum_dec);
             esp_mqtt_client_publish(mqtthandle, "/home/humidity", humidity, 0, 1, 0);
             old_hum_sig = meas->hum_sig;
             old_hum_dec = meas->hum_dec;
-            ESP_LOGI("MQTT", "Humidity published %d,%d", old_hum_sig, old_hum_dec);
+            ESP_LOGI("MQTT", "Humidity published %d.%d", old_hum_sig, old_hum_dec);
         }
         if(old_temp_sig != meas->temp_sig || old_temp_dec != meas->temp_dec){
             char temperature[16];
-            sprintf(temperature, "%d,%d °C", meas->temp_sig, meas->temp_dec);
+            sprintf(temperature, "%d.%d", meas->temp_sig, meas->temp_dec);
             esp_mqtt_client_publish(mqtthandle, "/home/temperature", temperature, 0, 1, 0);
             old_temp_sig = meas->temp_sig;
             old_temp_dec = meas->temp_dec;
-            ESP_LOGI("MQTT", "Temp published %d,%d", old_temp_sig, old_temp_dec);
+            ESP_LOGI("MQTT", "Temp published %d.%d", old_temp_sig, old_temp_dec);
         }
         if(meas->err == 1){
             esp_mqtt_client_publish(mqtthandle, "/errors", "misread", 0, 1, 0);
