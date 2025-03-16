@@ -9,8 +9,16 @@ type DataPoint = {
     device_id: string,
 }
 
-const handleDataFetch = (setHighchartsOpts: React.Dispatch<React.SetStateAction<Highcharts.Options>>) => {
-    fetch("/get_all_data_from_device?device_id=DHT_11")
+interface FetchDataBeforeHandlerArgs {
+    timestamp: number,
+    setHighchartsOpts: React.Dispatch<React.SetStateAction<Highcharts.Options>>,
+}
+
+const tzOffset = new Date().getTimezoneOffset()*60*1000;
+
+const fetchDataSinceHandler = (args: FetchDataBeforeHandlerArgs) => {
+    const { timestamp, setHighchartsOpts } = args;
+    fetch(`/get_data_since?timestamp=${timestamp}`)
         .then(res => {
             if(res.ok) return res.json()
         })
@@ -20,14 +28,22 @@ const handleDataFetch = (setHighchartsOpts: React.Dispatch<React.SetStateAction<
                 return {
                     series: [
                         {
-                            name: "Temperature",
+                            name: "Temperature (°C)",
+                            yAxis: "temp",
                             type: "spline",
-                            data: result.filter(item => item.topic === "/home/temperature").map(item => [item.timestamp, Number(item.value.split(" ")[0].replace(",", "."))])
+                            color: "#d27c51",
+                            data: result
+                                .filter(item => item.topic === "/home/temperature")
+                                .map(item => [item.timestamp*1000 - tzOffset, Number(item.value)])
                         },
                         {
-                            name: "Humidity",
+                            name: "Humidity (%)",
+                            yAxis: "hum",
                             type: "spline",
-                            data: result.filter(item => item.topic === "/home/humidity").map(item => [item.timestamp, Number(item.value.split(" ")[0].replace(",", "."))])
+                            color: "#5c8fbb",
+                            data: result
+                                .filter(item => item.topic === "/home/humidity")
+                                .map(item => [item.timestamp*1000 - tzOffset, Number(item.value)])
                         }
                     ]
                 }
@@ -37,11 +53,43 @@ const handleDataFetch = (setHighchartsOpts: React.Dispatch<React.SetStateAction<
 }
 
 const TempHumGraph = () => {
-    const [highchartsOpts, setHighchartsOpts] = useState<Highcharts.Options>({});
+    const [highchartsOpts, setHighchartsOpts] = useState<Highcharts.Options>({
+        chart: {
+            zooming: {
+                type: "x",
+            },
+        },
+        title: {
+            text: "Temperature and Humidity from DHT-11"
+        },
+        xAxis: {
+            type: "datetime"
+        },
+        yAxis: [
+            {
+                title: {
+                    text: "Temperature (°C)"
+                },
+                id: "temp",
+            },
+            {
+                title: {
+                    text: "Humidity (%)",
+                },
+                id: "hum",
+            }
+        ]
+    });
     useEffect(() => {
-        handleDataFetch(setHighchartsOpts);
+        fetchDataSinceHandler({
+            setHighchartsOpts,
+            timestamp: Math.floor((new Date().valueOf() / 1000) - 86400)
+        });
         const interval = setInterval(() => {
-            handleDataFetch(setHighchartsOpts);
+            fetchDataSinceHandler({
+                setHighchartsOpts,
+                timestamp: Math.floor((new Date().valueOf() / 1000) - 86400)
+            });
         }, 10000);
         return () => {
             return clearInterval(interval);
