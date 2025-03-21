@@ -9,21 +9,21 @@ export enum FetchingStatus {
     FAIL
 }
 
-export interface TemperatureAndHumidityState {
+export interface AllTopicsState {
     data: DataPoint[] | null;
     fetchingStatus: FetchingStatus;
     sinceTimestamp: number | null;
     startStop: [number, number] | null;
 }
 
-export const TemperatureAndHumidityContext = createContext<[TemperatureAndHumidityState, React.ActionDispatch<[action: TemperatureAndHumidityAction]> | null]>([{
+export const AllTopicsContext = createContext<[AllTopicsState, React.ActionDispatch<[action: AllTopicsAction]> | null]>([{
     data: null,
     fetchingStatus: FetchingStatus.IDLE,
     sinceTimestamp: getNowEpoch() - 86400,
     startStop: null,
 }, null])
 
-export const temperatureAndHumidityInitialState: TemperatureAndHumidityState = {
+export const allTopicsInitialState: AllTopicsState = {
     data: null,
     fetchingStatus: FetchingStatus.IDLE,
     sinceTimestamp: getNowEpoch() - 86400,
@@ -37,19 +37,19 @@ export enum ActionTypes {
     SET_START_STOP,
 }
 
-export interface TemperatureAndHumidityPayload {
+export interface AllTopicsPayload {
     data?: DataPoint[];
     timestamp?: number;
     fetchingStatus?: FetchingStatus;
     startStop?: [number, number];
 }
 
-export interface TemperatureAndHumidityAction {
+export interface AllTopicsAction {
     type: ActionTypes;
-    payload: TemperatureAndHumidityPayload
+    payload: AllTopicsPayload
 }
 
-export const temperatureAndHumidityReducer = (state: TemperatureAndHumidityState, action: TemperatureAndHumidityAction): TemperatureAndHumidityState => {
+export const AllTopicsReducer = (state: AllTopicsState, action: AllTopicsAction): AllTopicsState => {
     switch (action.type) {
         case ActionTypes.UPDATE_DATA:
             return {

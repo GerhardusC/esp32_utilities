@@ -1,10 +1,10 @@
 import { useEffect, useReducer, useState } from "react";
 
-import { ActionTypes, temperatureAndHumidityInitialState, temperatureAndHumidityReducer, TemperatureAndHumidityAction, FetchingStatus, TemperatureAndHumidityState } from "../Contexts/TemperatureAndHumidityContext";
+import { ActionTypes, allTopicsInitialState, AllTopicsReducer, AllTopicsAction, FetchingStatus, AllTopicsState } from "../Contexts/AllTopicsContext";
 import { getNowEpoch } from "../utils/funcs";
 
 interface HandleDataFetchParams {
-    dataFetchDispatch: React.ActionDispatch<[action: TemperatureAndHumidityAction]>;
+    dataFetchDispatch: React.ActionDispatch<[action: AllTopicsAction]>;
     timestamp?: number;
     startStop?: [number, number];
 }
@@ -50,7 +50,7 @@ const handleDataFetch = async (params: HandleDataFetchParams) => {
 
 const useDataFetch = () => {
     const [heartbeat, setHeartbeat] = useState(false);
-    const [dataFetchState, dataFetchDispatch] = useReducer(temperatureAndHumidityReducer, temperatureAndHumidityInitialState);
+    const [dataFetchState, dataFetchDispatch] = useReducer(AllTopicsReducer, allTopicsInitialState);
     useEffect(() => {
         if(dataFetchState.data){
             dataFetchDispatch({
@@ -95,7 +95,7 @@ const useDataFetch = () => {
 
     }, [dataFetchState.startStop]);
 
-    return [dataFetchState, dataFetchDispatch] as [TemperatureAndHumidityState,  React.ActionDispatch<[action: TemperatureAndHumidityAction]>];
+    return [dataFetchState, dataFetchDispatch] as [AllTopicsState,  React.ActionDispatch<[action: AllTopicsAction]>];
 }
 
 export default useDataFetch;

@@ -14,8 +14,8 @@ const SingleDateSelector = ({
     const timestampRef = useRef<HTMLInputElement>(null);
 
     return (
-        <div>
-            <label htmlFor="timestamp">Timestamp: </label>
+        <>
+            <label className="since-label" htmlFor="timestamp">Get data since:</label>
             <input
                 ref={timestampRef}
                 className="date-selection-input"
@@ -34,7 +34,7 @@ const SingleDateSelector = ({
                     }
                 }}
             >Ok</button>
-        </div>
+        </>
     )
 }
 

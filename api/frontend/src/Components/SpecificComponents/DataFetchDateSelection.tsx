@@ -2,21 +2,21 @@ import { useContext, useState } from "react"
 
 import DateRangePicker from "../GeneralComponents/DateRangePicker"
 import SingleDateSelector from "../GeneralComponents/SingleDateSelector"
-import { ActionTypes, TemperatureAndHumidityContext } from "../../Contexts/TemperatureAndHumidityContext";
+import { ActionTypes, AllTopicsContext } from "../../Contexts/AllTopicsContext";
 import { tzOffsetMillis } from "../../utils/constants";
 import { getNowEpoch } from "../../utils/funcs";
 
 const DataFetchDateSelection = () => {
     const [singleDate, setSingleDate] = useState(true);
-    const [dataFetchState, dataFetchDispatch] = useContext(TemperatureAndHumidityContext);
+    const [dataFetchState, dataFetchDispatch] = useContext(AllTopicsContext);
 
     return (
-        <div>
-            <button onClick={() => {
-                setSingleDate(prev => !prev);
-            }}>
-                {singleDate ? "Switch to range" : "Switch to timestamp"}
-            </button>
+        <div
+            className="date-selector-outer-container"
+        >
+            <div
+                className="date-selector-container"
+            >
             {
                 singleDate ?
                 <SingleDateSelector
@@ -48,6 +48,12 @@ const DataFetchDateSelection = () => {
                     }
                 />
             }
+            </div>
+            <button onClick={() => {
+                setSingleDate(prev => !prev);
+            }}>
+                {singleDate ? "Switch to range" : "Switch to timestamp"}
+            </button>
         </div>
     )
 }
