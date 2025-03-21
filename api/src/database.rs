@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct SensorDataPoint {
     timestamp: u64,
     topic: String,
-    value: String,
+    value: f32,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

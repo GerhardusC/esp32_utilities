@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { tzOffsetMillis } from "../utils/constants";
+
 import { getNowEpoch } from "../utils/funcs";
 
 export enum FetchingStatus {
@@ -77,7 +77,7 @@ export const temperatureAndHumidityReducer = (state: TemperatureAndHumidityState
                 }
             }
             let stop = action.payload.startStop[1];
-            const now = (new Date().valueOf() - tzOffsetMillis)/1000;
+            const now = getNowEpoch();
             if(stop > now){
                 stop = now;
             }

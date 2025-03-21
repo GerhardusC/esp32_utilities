@@ -60,7 +60,6 @@ const useDataFetch = () => {
                 }
             })
         }
-        console.log("FetchingStatus updated to: ", dataFetchState.fetchingStatus);
     }, [dataFetchState.fetchingStatus]);
 
     useEffect(() => {
@@ -69,7 +68,6 @@ const useDataFetch = () => {
             startStop: dataFetchState.startStop ?? undefined,
             timestamp: dataFetchState.sinceTimestamp ?? undefined,
         });
-        console.log("Heartbeat updated to: ", heartbeat);
     }, [heartbeat]);
 
     useEffect(() => {
@@ -77,7 +75,6 @@ const useDataFetch = () => {
             return;
         }
         const intervalDur = getIntervalDurationFromTimestamp(dataFetchState.sinceTimestamp);
-        console.log("Interval dur:", intervalDur);
 
         setHeartbeat(prev => !prev);
         const interval = setInterval(() => {
@@ -104,8 +101,8 @@ const useDataFetch = () => {
 export default useDataFetch;
 
 const getIntervalDurationFromTimestamp = (timestamp: number) => {
-    const intervalSize = ((getNowEpoch() - timestamp) / 1000)*1000;
-    if(intervalSize > 10000){
+    const intervalSize = ((getNowEpoch() - timestamp) / 500)*200;
+    if(intervalSize < 10000){
         return 10000;
     }
     if(intervalSize > 50000){

@@ -1,6 +1,6 @@
 #include "dht.h"
 #define DHT_METER_TIMER 2
-#define DATA_LINE 4
+#define DATA_LINE 19
 
 static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 #define PORT_ENTER_CRITICAL() portENTER_CRITICAL(&mux)

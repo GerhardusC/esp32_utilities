@@ -1,4 +1,5 @@
 import { useContext, useState } from "react"
+
 import DateRangePicker from "../GeneralComponents/DateRangePicker"
 import SingleDateSelector from "../GeneralComponents/SingleDateSelector"
 import { ActionTypes, TemperatureAndHumidityContext } from "../../Contexts/TemperatureAndHumidityContext";
@@ -40,7 +41,11 @@ const DataFetchDateSelection = () => {
                             }
                         })
                     }}
-                    startStop={dataFetchState.startStop ?? [new Date().valueOf() - tzOffsetMillis - 3600*1000, new Date().valueOf() - tzOffsetMillis]}
+                    startStop={
+                        dataFetchState
+                            .startStop?.map(item => item * 1000 - tzOffsetMillis) as [number, number] | undefined
+                            ?? [new Date().valueOf() - tzOffsetMillis - 3600*1000, new Date().valueOf() - tzOffsetMillis]
+                    }
                 />
             }
         </div>

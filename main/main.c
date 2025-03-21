@@ -111,7 +111,7 @@ void app_main(void) {
     clear_shift_register();
 
     while(1) {
-        vTaskDelay(10000);
+        vTaskDelay(100000);
         ;;
     }
 }

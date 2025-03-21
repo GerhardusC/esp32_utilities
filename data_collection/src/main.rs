@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
         CREATE TABLE if not exists READINGS (
             timestamp int NOT NULL,
             topic varchar(255) NOT NULL,
-            value varchar(255) NOT NULL
+            value float(2) NOT NULL
         )
         ",
         (),
