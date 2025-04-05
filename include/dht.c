@@ -8,10 +8,10 @@ static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
 
 void setup_thermometer() {
     gpio_reset_pin(DATA_LINE);
+    gpio_pullup_en(DATA_LINE);
     gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT_OD);
     gpio_set_level(DATA_LINE, 0);
     gpio_set_level(DATA_LINE, 1);
-    gpio_pulldown_en(DATA_LINE);
 }
 
 uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_state){
