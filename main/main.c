@@ -27,11 +27,11 @@ void temp_task(void *measurement) {
     while(1){
         read_temp(meas);
         if(!meas->err){
-            ESP_LOGI("Results:", "Humidity: %d, Temp: %d", meas->hum_sig, meas->temp_sig);
+            ESP_LOGI("INFO_THERMOMETER_RESULTS", "Humidity: %d, Temp: %d", meas->hum_sig, meas->temp_sig);
         } else {
-            ESP_LOGI("ERROR:", "Thermometer error");
+            ESP_LOGE("ERR_THERMOMETER_ERROR", "Failed to read temperature");
         }
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -96,6 +96,9 @@ void setup() {
 void app_main(void) {
     setup();
     wifi_init_connection();
+    ESP_LOGI("INFO_STARTUP_WAIT", "Starting delay after startup to finish wifi setup");
+    vTaskDelay(1000);
+    ESP_LOGI("INFO_STARTUP_WAIT", "Wifi setup should be complete by now");
 
     struct Temp_reading *measurement = malloc(sizeof(struct Temp_reading));
     measurement->err = 0;
@@ -112,6 +115,5 @@ void app_main(void) {
 
     while(1) {
         vTaskDelay(100000);
-        ;;
     }
 }

@@ -1,10 +1,12 @@
 #include "dht.h"
+#include "freertos/idf_additions.h"
+// #include "portmacro.h"
 #define DHT_METER_TIMER 2
 #define DATA_LINE 19
 
-static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
-#define PORT_ENTER_CRITICAL() portENTER_CRITICAL(&mux)
-#define PORT_EXIT_CRITICAL() portEXIT_CRITICAL(&mux)
+// static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
+// #define PORT_ENTER_CRITICAL() portENTER_CRITICAL(&mux)
+// #define PORT_EXIT_CRITICAL() portEXIT_CRITICAL(&mux)
 
 void setup_thermometer() {
     gpio_reset_pin(DATA_LINE);
@@ -29,28 +31,33 @@ uint16_t wait_for_pin_state(gpio_num_t pin, uint32_t timeout, uint8_t expected_s
 }
 
 void read_temp_critical_section(struct Temp_reading *measurement){
+    ESP_LOGI("INFO_LOG_START", "Log starting delay");
     // Low for 18 ms on sig line.
     gpio_set_level(DATA_LINE, 0);
     wait_us_blocking(18000);
+    vTaskSuspendAll();
     gpio_set_level(DATA_LINE, 1);
     // Read response.
     // Phase 1: Wait 20-40 us for downpull.
     if(wait_for_pin_state(DATA_LINE, 40, 0) == 0){
-        // ESP_LOGI("Something went wrong at:", "Phase 1 wait for pull down.");
+        xTaskResumeAll();
+        ESP_LOGE("ERR_THERMOMETER", "Phase 1 wait for pull down.");
         measurement->err = 1;
         gpio_set_level(DATA_LINE, 1);
         return;
     };
     // Phase 2: Wait for pull down by sensor
     if(wait_for_pin_state(DATA_LINE, 88, 1) == 0){
-        // ESP_LOGI("Something went wrong at:", "Phase 2 wait for pull down by sensor.");
+        xTaskResumeAll();
+        ESP_LOGE("ERR_THERMOMETER", "Phase 2 wait for pull down by sensor.");
         measurement->err = 1;
         gpio_set_level(DATA_LINE, 1);
         return;
     };
     // Phase 3: Wait for pull down by sensor
     if(wait_for_pin_state(DATA_LINE, 88, 0) == 0){
-        // ESP_LOGI("Something went wrong at:", "Phase 3 wait for pull down by sensor.");
+        xTaskResumeAll();
+        ESP_LOGE("ERR_THERMOMETER", "Phase 3 wait for pull down by sensor.");
         measurement->err = 1;
         gpio_set_level(DATA_LINE, 1);
         return;
@@ -86,14 +93,7 @@ void read_temp(struct Temp_reading *measurement) {
     // Reset error state.
     measurement->err = 0;
     gpio_set_direction(DATA_LINE, GPIO_MODE_OUTPUT_OD);
-    // PORT_ENTER_CRITICAL();
-    vTaskSuspendAll();
     read_temp_critical_section(measurement);
-    if(measurement->err == 1){
-        xTaskResumeAll();
-    }
-    // PORT_EXIT_CRITICAL();
     gpio_set_level(DATA_LINE, 1);
-
     return;
 }
